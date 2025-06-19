@@ -50,9 +50,9 @@ WantedBy=multi-user.target
 Запустите и проверьте состояние службы  
 ```
 sudo systemctl daemon-reload
-sudo systemctl enable flaskapp.service
-sudo systemctl start flaskapp.service
-sudo systemctl status flaskapp.service
+sudo systemctl enable atlassian_agent_web.service
+sudo systemctl start atlassian_agent_web.service
+sudo systemctl status atlassian_agent_web.service
 ```
 
 При корректном запуске веб-интерфейс будет доступен по http://<адрес вашего сервера>:8085   
