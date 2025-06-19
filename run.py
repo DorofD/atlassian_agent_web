@@ -23,13 +23,12 @@ def index():
             try:
                 exec_command_with_plugin = exec_command.replace(
                     "PLUGIN_CODE", plugin_code)
-                exec_command_list = exec_command_with_plugin.split(' ')
-                print(exec_command_with_plugin)
                 completed_process = subprocess.run(
-                    exec_command_list,
+                    exec_command_with_plugin,
                     capture_output=True,
                     text=True,
-                    check=True
+                    check=True,
+                    shell=True
                 )
                 exec_result = completed_process.stdout.strip()
             except subprocess.CalledProcessError as e:
