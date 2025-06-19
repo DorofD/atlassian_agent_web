@@ -12,7 +12,7 @@ cd
 Клонируйте репозиторий и установите зависимости  
 ```
 git clone https://github.com/DorofD/atlassian_agent_web
-cd atlassian_agent_web
+mv atlassian_agent_web app && cd app
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
