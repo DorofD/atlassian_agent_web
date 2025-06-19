@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Atlassian Agent Web</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="form-container">
+        <form class="form" method="POST">
+            <p>Введите код плагина:</p>
+            <input type="text" id="plugin_code" name="plugin_code" placeholder="Код плагина">
+
+            <label for="exec_command">Ключ плагина: </label>
+            <textarea class="exec" id="exec_result" name="exec_result"
+                placeholder="Здесь появится результат выполнения команды">{{ exec_result }}</textarea>
+            <button type="submit">Сгенерировать ключ</button>
+        </form>
+        <form class="form">
+            <p>Текущая команда для выполнения (код плагина будет изменён автоматически):</p>
+            {{ exec_command }}
+
+        </form>
+    </div>
+</body>
+
+</html>
