@@ -55,11 +55,13 @@
             >
 {{ exec_result }}</textarea
             >
+            <!-- Добавил id="copy-btn" -->
             <button
               type="button"
+              id="copy-btn"
               class="copy-btn"
               title="Копировать в буфер обмена"
-              aria-label="Копировать"
+              aria-label="Copy"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -89,31 +91,89 @@
 
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        const copyBtn = document.querySelector(".copy-btn");
+        const copyBtn = document.getElementById("copy-btn");
         const execResult = document.getElementById("exec_result");
+
+        // Универсальная функция копирования — работает и на HTTP, и на HTTPS
+        async function copyTextToClipboard(text) {
+          // 1. Попытка использовать современный Clipboard API (только HTTPS/localhost)
+          if (navigator.clipboard && window.isSecureContext) {
+            try {
+              await navigator.clipboard.writeText(text);
+              return true;
+            } catch (e) {
+              console.warn("Clipboard API не удался:", e);
+            }
+          }
+
+          // 2. Fallback через execCommand — работает на HTTP
+          try {
+            const tempTextArea = document.createElement("textarea");
+            tempTextArea.value = text;
+            tempTextArea.setAttribute("readonly", "");
+            tempTextArea.style.position = "fixed";
+            tempTextArea.style.top = "0";
+            tempTextArea.style.left = "-9999px";
+            tempTextArea.style.width = "1px";
+            tempTextArea.style.height = "1px";
+            tempTextArea.style.padding = "0";
+            tempTextArea.style.border = "none";
+            tempTextArea.style.outline = "none";
+            tempTextArea.style.boxShadow = "none";
+            tempTextArea.style.background = "transparent";
+
+            document.body.appendChild(tempTextArea);
+            tempTextArea.focus();
+            if (tempTextArea.createTextRange) {
+              const range = tempTextArea.createTextRange();
+              range.moveStart("character", 0);
+              range.moveEnd("character", tempTextArea.value.length);
+              range.select();
+            } else {
+              tempTextArea.select();
+            }
+
+            const success = document.execCommand("copy");
+            document.body.removeChild(tempTextArea);
+
+            if (!success) {
+              throw new Error("execCommand('copy') вернул false");
+            }
+            return true;
+          } catch (err) {
+            console.error("Ошибка копирования:", err);
+            return false;
+          }
+        }
 
         if (copyBtn && execResult) {
           copyBtn.addEventListener("click", async function () {
             const text = execResult.value.trim();
-            if (!text) return;
+            if (!text) {
+              alert("Нет текста для копирования");
+              return;
+            }
 
-            try {
-              await navigator.clipboard.writeText(text);
-              const originalText = copyBtn.innerHTML;
+            const success = await copyTextToClipboard(text);
+
+            if (success) {
+              const originalSVG = copyBtn.innerHTML;
               copyBtn.innerHTML = `
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                 </svg>`;
               copyBtn.title = "Скопировано!";
               copyBtn.disabled = true;
 
               setTimeout(() => {
-                copyBtn.innerHTML = originalText;
+                copyBtn.innerHTML = originalSVG;
                 copyBtn.title = "Копировать в буфер обмена";
                 copyBtn.disabled = false;
               }, 2000);
-            } catch (err) {
-              alert("Не удалось скопировать: " + err.message);
+            } else {
+              alert(
+                "Не удалось скопировать. Попробуйте выделить текст вручную и нажать Ctrl+C.",
+              );
             }
           });
         }
