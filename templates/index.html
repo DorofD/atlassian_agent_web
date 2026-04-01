@@ -1,29 +1,123 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
-
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Atlassian Agent Web</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
 
-<body>
+  <body>
     <div class="form-container">
-        <form class="form" method="POST">
-            <p>Введите код плагина:</p>
-            <input type="text" id="plugin_code" name="plugin_code" placeholder="Код плагина">
+      <form class="form" method="POST">
+        <p>Выберите сервер:</p>
+        <div class="server-list">
+          {% for server in servers %}
+          <label class="server-option">
+            <input
+              type="radio"
+              name="server_id"
+              value="{{ server.id }}"
+              required
+              {%
+              if
+              loop.first
+              %}checked{%
+              endif
+              %}
+            />
+            <span class="server-id">{{ server.id }}</span>
+            <span class="server-desc">{{ server.description }}</span>
+          </label>
+          {% endfor %}
+        </div>
 
-            <label for="exec_command">Ключ плагина: </label>
-            <textarea class="exec" id="exec_result" name="exec_result"
-                placeholder="Здесь появится результат выполнения команды">{{ exec_result }}</textarea>
-            <button type="submit">Сгенерировать ключ</button>
-        </form>
-        <form class="form">
-            <p>Текущая команда для выполнения (код плагина будет изменён автоматически):</p>
-            {{ exec_command }}
+        <p>Введите код плагина:</p>
+        <input
+          type="text"
+          id="plugin_code"
+          name="plugin_code"
+          placeholder="Код плагина"
+          required
+        />
 
-        </form>
+        <div class="result-wrapper">
+          <label for="exec_result">Ключ плагина:</label>
+          <div class="input-with-button">
+            <textarea
+              class="exec"
+              id="exec_result"
+              name="exec_result"
+              placeholder="Здесь появится результат выполнения команды"
+              readonly
+            >
+{{ exec_result }}</textarea
+            >
+            <button
+              type="button"
+              class="copy-btn"
+              title="Копировать в буфер обмена"
+              aria-label="Копировать"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                fill="currentColor"
+              >
+                <path
+                  d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v10z"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit">Сгенерировать ключ</button>
+      </form>
+
+      <form class="form">
+        <p>
+          Текущая команда для выполнения (код плагина и сервера будут
+          подставлены автоматически):
+        </p>
+        <pre><code>{{ exec_command }}</code></pre>
+      </form>
     </div>
-</body>
 
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const copyBtn = document.querySelector(".copy-btn");
+        const execResult = document.getElementById("exec_result");
+
+        if (copyBtn && execResult) {
+          copyBtn.addEventListener("click", async function () {
+            const text = execResult.value.trim();
+            if (!text) return;
+
+            try {
+              await navigator.clipboard.writeText(text);
+              const originalText = copyBtn.innerHTML;
+              copyBtn.innerHTML = `
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                </svg>`;
+              copyBtn.title = "Скопировано!";
+              copyBtn.disabled = true;
+
+              setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+                copyBtn.title = "Копировать в буфер обмена";
+                copyBtn.disabled = false;
+              }, 2000);
+            } catch (err) {
+              alert("Не удалось скопировать: " + err.message);
+            }
+          });
+        }
+      });
+    </script>
+  </body>
 </html>

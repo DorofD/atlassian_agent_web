@@ -11,20 +11,33 @@ def index():
     try:
         with open("settings.json", "r") as f:
             settings = json.load(f)
-            exec_command = settings.get("exec_command", "Not found")
+            exec_command_template = settings.get("exec_command", "Not found")
+            servers = settings.get("servers", [])
     except (FileNotFoundError, json.JSONDecodeError) as e:
         print(f'Error when reading settings.json: {e}')
-        exec_command = "Error settings"
+        exec_command_template = "Error settings"
+        servers = []
 
     exec_result = ""
+    exec_command = ""
+
     if request.method == "POST":
-        plugin_code = request.form.get("plugin_code")
-        if plugin_code:
+        plugin_code = request.form.get("plugin_code", "").strip()
+        server_id = request.form.get("server_id", "").strip()
+
+        if not plugin_code:
+            exec_result = "Код плагина не указан"
+        elif not server_id:
+            exec_result = "Сервер не выбран"
+        else:
             try:
-                exec_command_with_plugin = exec_command.replace(
-                    "PLUGIN_CODE", plugin_code)
+                exec_command = exec_command_template.replace(
+                    "PLUGIN_CODE", plugin_code).replace("SERVER_ID", server_id)
+
+                print(f"Executing command: {exec_command}")
+
                 completed_process = subprocess.run(
-                    exec_command_with_plugin,
+                    exec_command,
                     capture_output=True,
                     text=True,
                     check=True,
@@ -32,17 +45,36 @@ def index():
                 )
                 exec_result = completed_process.stdout.strip()
             except subprocess.CalledProcessError as e:
-                exec_result = f"Error when execution command: {e}"
-        else:
-            exec_result = "Код плагина не указан"
+                exec_result = f"Ошибка при выполнении команды:\n{e.stderr.strip() or e}"
+            except Exception as e:
+                exec_result = f"Непредвиденная ошибка: {e}"
 
-    return render_template("index.html", exec_command=exec_command, exec_result=exec_result)
+    return render_template(
+        "index.html",
+        exec_command=exec_command or exec_command_template,
+        exec_result=exec_result,
+        servers=servers
+    )
 
 
 @app.errorhandler(Exception)
 def handle_value_error(error):
     print(f"ERROR: {error}")
-    return render_template("index.html", exec_command="Error", exec_result=error)
+    try:
+        with open("settings.json", "r") as f:
+            settings = json.load(f)
+            exec_command = settings.get("exec_command", "Not found")
+            servers = settings.get("servers", [])
+    except:
+        exec_command = "Error"
+        servers = []
+
+    return render_template(
+        "index.html",
+        exec_command=exec_command,
+        exec_result=str(error),
+        servers=servers
+    )
 
 
 if __name__ == "__main__":

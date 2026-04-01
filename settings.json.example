@@ -1,3 +1,13 @@
 {
-    "exec_command": "echo 'Enter your command here'"
+    "exec_command": "/usr/bin/docker exec jira-srv java -jar /var/agent/atlassian-agent.jar -d -p PLUGIN_CODE -m test@test.test -n test@test.test -o some_company -s SERVER_ID | /usr/bin/tail -n +9",
+    "servers": [
+        {
+            "id": "XXXX-XXXX-XXXX-XXXX",
+            "description": "jira server"
+        },
+        {
+            "id": "YYYY-YYYY-YYYY-YYYY",
+            "description": "confluence server"
+        }
+    ]
 }
